@@ -13,12 +13,21 @@ import { clerkMiddleware } from "@clerk/express";
 
 dotenv.config();
 const app = express();
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://problem-picker-frontend.vercel.app",
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://problem-picker-frontend.vercel.app",
-    ],
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("❌ Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
@@ -30,6 +39,7 @@ await connectDB();
 app.use("/api/questions", questionRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+console.log("✅ NEW CORS CONFIG ACTIVE");
 
 const PORT = process.env.PORT || 3000;
 
